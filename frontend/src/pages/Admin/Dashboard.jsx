@@ -194,65 +194,92 @@ export default function AdminDashboard() {
               </h3>
               <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-600'}`}>Student demographics</p>
             </div>
-            <div className="flex justify-center mb-6">
-              <div className="relative w-48 h-48">
-                <svg viewBox="0 0 200 200" className="transform -rotate-90">
+
+            {/* Enhanced Pie Chart */}
+            <div className="flex justify-center mb-8">
+              <div className="relative w-56 h-56">
+                <svg viewBox="0 0 224 224" className="w-full h-full">
+                  {/* Background circle */}
+                  <circle
+                    cx="112"
+                    cy="112"
+                    r="100"
+                    fill="none"
+                    stroke={theme === 'dark' ? '#374151' : '#f1f5f9'}
+                    strokeWidth="8"
+                  />
+
                   {/* Male segment */}
-                  <path
-                    d={`M 100 100 L 100 30 A 70 70 0 ${genderData.male > 50 ? 1 : 0} 1 ${
-                      100 + 70 * Math.cos((genderData.male * 360 * Math.PI) / 18000)
-                    } ${
-                      100 + 70 * Math.sin((genderData.male * 360 * Math.PI) / 18000)
-                    } Z`}
-                    fill="#3b82f6"
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
+                  <circle
+                    cx="112"
+                    cy="112"
+                    r="100"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="24"
+                    strokeDasharray={`${Math.max((genderData.male / 100) * 628.32, 40)} 628.32`}
+                    strokeDashoffset="0"
+                    className="transition-all duration-1000 ease-out"
+                    transform="rotate(-90 112 112)"
                   />
+
                   {/* Female segment */}
-                  <path
-                    d={`M 100 100 L ${
-                      100 + 70 * Math.cos((genderData.male * 360 * Math.PI) / 18000)
-                    } ${
-                      100 + 70 * Math.sin((genderData.male * 360 * Math.PI) / 18000)
-                    } A 70 70 0 ${genderData.female > 50 ? 1 : 0} 1 100 30 Z`}
-                    fill="#ec4899"
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
+                  <circle
+                    cx="112"
+                    cy="112"
+                    r="100"
+                    fill="none"
+                    stroke="#ec4899"
+                    strokeWidth="24"
+                    strokeDasharray={`${Math.max((genderData.female / 100) * 628.32, 40)} 628.32`}
+                    strokeDashoffset={`${-(genderData.male / 100) * 628.32}`}
+                    className="transition-all duration-1000 ease-out"
+                    transform="rotate(-90 112 112)"
                   />
-                  <circle cx="100" cy="100" r="40" fill={theme === 'dark' ? '#1f2937' : 'white'} />
                 </svg>
+
+                {/* Center content */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-slate-800'}`}>
                       {stats.find(s => s.title === "Total Students")?.value || "0"}
                     </p>
-                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>Total</p>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>Total Students</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="space-y-3">
-              <div className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-slate-50'}`}>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-slate-700'}`}>
-                    Male
-                  </span>
+
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className={`p-4 rounded-xl text-center transition-all hover:scale-105 ${theme === 'dark' ? 'bg-blue-900/20 border border-blue-700/30' : 'bg-blue-50 border border-blue-200'}`}>
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>Male</span>
                 </div>
-                <span className={`text-sm font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-slate-800'}`}>
+                <p className={`text-xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
                   {genderData.male}%
-                </span>
+                </p>
+                <p className={`text-xs ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`}>
+                  {genderData.maleCount} students
+                </p>
               </div>
-              <div className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-slate-50'}`}>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-pink-500"></div>
-                  <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-slate-700'}`}>
-                    Female
-                  </span>
+
+              <div className={`p-4 rounded-xl text-center transition-all hover:scale-105 ${theme === 'dark' ? 'bg-pink-900/20 border border-pink-700/30' : 'bg-pink-50 border border-pink-200'}`}>
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-4 h-4 rounded-full bg-pink-500 mr-2"></div>
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-pink-300' : 'text-pink-700'}`}>Female</span>
                 </div>
-                <span className={`text-sm font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-slate-800'}`}>
+                <p className={`text-xl font-bold ${theme === 'dark' ? 'text-pink-400' : 'text-pink-600'}`}>
                   {genderData.female}%
-                </span>
+                </p>
+                <p className={`text-xs ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'}`}>
+                  {genderData.femaleCount} students
+                </p>
               </div>
             </div>
+
+          
           </div>
         </div>
 

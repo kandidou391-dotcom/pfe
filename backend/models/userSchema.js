@@ -4,11 +4,12 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   prenom: { type: String, required: true, trim: true },
   nom: { type: String, required: true, trim: true },
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true, 
-    lowercase: true, 
+  sexe: { type: String, enum: ["Homme", "Femme"], required: true },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
     trim: true,
     match: [/.+@.+\..+/, 'Veuillez entrer une adresse email valide']
   },
@@ -52,6 +53,17 @@ const userSchema = new mongoose.Schema({
   resetCode: String,
   resetCodeExpires: Date,
 }, { timestamps: true });
+
+/* ===========================================================
+   📊 DATABASE INDEXES FOR PERFORMANCE
+=========================================================== */
+userSchema.index({ role: 1 }); // For filtering by role
+userSchema.index({ email: 1 }); // For login and uniqueness
+userSchema.index({ classe: 1 }); // For student queries
+userSchema.index({ classes: 1 }); // For teacher queries
+userSchema.index({ role: 1, sexe: 1 }); // For gender stats
+userSchema.index({ role: 1, createdAt: 1 }); // For enrollment trends
+userSchema.index({ role: 1, classe: 1 }); // For class-based queries
 
 /* ===========================================================
    🧂 Hash password before saving

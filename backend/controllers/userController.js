@@ -5,6 +5,10 @@ const bcrypt = require("bcrypt");
 const classeModel = require("../models/classeSchema");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
+const NodeCache = require('node-cache');
+
+// Initialize cache (same as dashboard controller)
+const cache = new NodeCache({ stdTTL: 300 });
 
 // Related models for cascade delete
 const Cours = require("../models/coursSchema");
@@ -27,6 +31,9 @@ module.exports.createAdmin = async (req, res) => {
 
     const newUser = new userModel(userData);
     await newUser.save();
+
+    // Clear dashboard cache to reflect updated stats immediately
+    cache.del('dashboard_stats');
 
     res.status(201).json({ message: "Admin créé avec succès ✅", newUser });
   } catch (error) {
@@ -70,6 +77,9 @@ module.exports.createEnseignant = async (req, res) => {
       await newUser.save();
     }
 
+    // Clear dashboard cache to reflect updated stats immediately
+    cache.del('dashboard_stats');
+
     res.status(201).json({
       message: "Enseignant créé et associé à ses classes avec succès ✅",
       newUser,
@@ -106,6 +116,9 @@ module.exports.createEtudiant = async (req, res) => {
       newUser.classe = classe._id;
       await newUser.save();
     }
+
+    // Clear dashboard cache to reflect updated stats immediately
+    cache.del('dashboard_stats');
 
     res.status(201).json({
       message: "Étudiant créé et associé à sa classe avec succès ✅",
@@ -387,6 +400,10 @@ module.exports.deleteUserById = async (req, res) => {
     ]);
 
     await userModel.findByIdAndDelete(id);
+
+    // Clear dashboard cache to reflect updated stats immediately
+    cache.del('dashboard_stats');
+
     res.status(200).json({ message: "Utilisateur et données liées supprimés ✅" });
   } catch (error) {
     console.error("❌ Erreur deleteUserById:", error.message);

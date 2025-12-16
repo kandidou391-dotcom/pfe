@@ -74,6 +74,7 @@ export default function AdminUsers() {
     email: '',
     password: '',
     role: 'etudiant',
+    sexe: '',
     image_User: null,
     NumTel: '',
     Adresse: '',
@@ -212,7 +213,7 @@ export default function AdminUsers() {
   const validateForm = (isUpdate = false) => {
     const errors = {};
     const userData = isUpdate ? updatingUser : newUser;
-    
+
     if (!userData.nom.trim()) errors.nom = 'Last name is required';
     if (!userData.prenom.trim()) errors.prenom = 'First name is required';
     if (!userData.email.trim()) {
@@ -220,7 +221,7 @@ export default function AdminUsers() {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
       errors.email = 'Invalid email address';
     }
-    
+
     // Password only required for new users
     if (!isUpdate) {
       if (!userData.password) {
@@ -231,8 +232,9 @@ export default function AdminUsers() {
     } else if (userData.password && !/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(userData.password)) {
       errors.password = 'Password must contain at least 8 characters, one uppercase, one lowercase and one number';
     }
-    
+
     if (!userData.role) errors.role = 'Role is required';
+    if (!userData.sexe) errors.sexe = 'Gender is required';
     if (userData.role === 'etudiant' && !userData.classe) {
       errors.classe = 'Class is required for students';
     }
@@ -259,6 +261,7 @@ export default function AdminUsers() {
       };
 
       if (newUser.role === "etudiant") {
+        if (newUser.sexe) userData.sexe = newUser.sexe;
         if (newUser.NumTel) userData.NumTel = newUser.NumTel;
         if (newUser.Adresse) userData.Adresse = newUser.Adresse;
         if (newUser.datedeNaissance) userData.datedeNaissance = newUser.datedeNaissance;
@@ -306,6 +309,7 @@ export default function AdminUsers() {
         prenom: updatingUser.prenom,
         email: updatingUser.email,
         role: updatingUser.role,
+        sexe: updatingUser.sexe,
       };
 
       // Only include password if it was changed
@@ -687,6 +691,9 @@ export default function AdminUsers() {
                         {selectedUser.Status ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
+                    <p className="text-sm text-muted-foreground mt-2 text-center">
+                      Gender: {selectedUser.sexe === 'Homme' ? 'Male' : 'Female'}
+                    </p>
                   </div>
                 </div>
 
@@ -927,6 +934,19 @@ export default function AdminUsers() {
                     </SelectContent>
                   </Select>
                   {formErrors.role && <p className="text-xs text-destructive">{formErrors.role}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sexe" className="text-xs sm:text-sm">Gender *</Label>
+                  <Select value={newUser.sexe} onValueChange={(value) => { setNewUser({...newUser, sexe: value}); if (formErrors.sexe) setFormErrors({...formErrors, sexe: ''}); }}>
+                    <SelectTrigger className={`h-9 text-sm ${formErrors.sexe ? 'border-destructive' : ''}`}>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Homme">Male</SelectItem>
+                      <SelectItem value="Femme">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formErrors.sexe && <p className="text-xs text-destructive">{formErrors.sexe}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="image_User" className="text-xs sm:text-sm">Profile Image</Label>
@@ -1178,6 +1198,19 @@ export default function AdminUsers() {
                       </SelectContent>
                     </Select>
                     {formErrors.role && <p className="text-xs text-destructive">{formErrors.role}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="update-sexe" className="text-xs sm:text-sm">Gender *</Label>
+                    <Select value={updatingUser.sexe} onValueChange={(value) => { setUpdatingUser({...updatingUser, sexe: value}); if (formErrors.sexe) setFormErrors({...formErrors, sexe: ''}); }}>
+                      <SelectTrigger className={`h-9 text-sm ${formErrors.sexe ? 'border-destructive' : ''}`}>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Homme">Male</SelectItem>
+                        <SelectItem value="Femme">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formErrors.sexe && <p className="text-xs text-destructive">{formErrors.sexe}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="update-image_User" className="text-xs sm:text-sm">Profile Image</Label>
