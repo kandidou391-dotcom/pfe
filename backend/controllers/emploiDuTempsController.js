@@ -187,7 +187,7 @@ module.exports.getAllEmplois = async (req, res) => {
             }
           }
         })
-        .populate("classe", "nom annee specialisation");
+        .populate({ path: "classe", select: "nom annee specialisation etudiants", populate: { path: "etudiants", select: "_id prenom nom" } });
 
       // Filter out emplois with no matching seances
       emplois = emplois.filter(emploi => emploi.seances && emploi.seances.some(seance => seance.cours !== null));
