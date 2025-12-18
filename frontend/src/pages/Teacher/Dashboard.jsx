@@ -14,6 +14,7 @@ export default function TeacherDashboard() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [stats, setStats] = useState([]);
   const [todayClasses, setTodayClasses] = useState([]);
+  const [todaysSessions, setTodaysSessions] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,7 @@ export default function TeacherDashboard() {
       setError(null);
       try {
         // Dashboard stats and activity
-        const dashboard = await getDashboardStats();
+        const dashboard = await getDashboardStats('teacher');
         setStats(dashboard.stats?.map((stat) => {
           // Map icon string to Lucide icon if possible
           let icon = BookOpen;
@@ -79,25 +80,18 @@ export default function TeacherDashboard() {
           time: a.time,
           icon: a.action?.toLowerCase().includes('grade') ? TrendingUp : a.action?.toLowerCase().includes('assignment') ? ClipboardCheck : a.action?.toLowerCase().includes('question') ? AlertCircle : Bell,
         })) || []);
+        console.log('Recent Activities:', dashboard.recentActivity?.map((a) => ({
+          ...a,
+          student: a.user || '',
+          action: a.action,
+          time: a.time,
+          icon: a.action?.toLowerCase().includes('grade') ? TrendingUp : a.action?.toLowerCase().includes('assignment') ? ClipboardCheck : a.action?.toLowerCase().includes('question') ? AlertCircle : Bell,
+        })) || []);
+        setTodaysSessions(dashboard.todaysSessions || []);
+        console.log('Today\'s Classes:', dashboard.todaysSessions || []);
 
-        // Today’s classes for this teacher
+        // Notification count
         if (user?._id) {
-          const seances = await getSeancesByEnseignant(user._id);
-          // Filter for today’s date
-          const today = new Date();
-          const todayStr = today.toISOString().slice(0, 10);
-          const todaySeances = (seances || []).filter(s => s.date && s.date.slice(0, 10) === todayStr);
-          setTodayClasses(todaySeances.map((s, idx) => ({
-            id: s._id || idx,
-            time: s.heureDebut ? s.heureDebut.slice(0,5) : '',
-            endTime: s.heureFin ? s.heureFin.slice(0,5) : '',
-            course: s.cours?.nom || s.cours || 'Course',
-            room: s.salle || 'Room',
-            students: s.classe?.etudiants?.length || 0,
-            attendanceTaken: s.presenceTaken || false,
-            status: s.heureDebut && new Date(todayStr + 'T' + s.heureDebut) < today ? 'completed' : 'upcoming',
-          })));
-          // Notification count
           const notifications = await getNotificationsByUser(user._id);
           setNotificationCount(Array.isArray(notifications) ? notifications.filter(n => !n.lu).length : 0);
         }
@@ -154,23 +148,7 @@ export default function TeacherDashboard() {
               <span className="text-sm text-slate-500 dark:text-slate-500">{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}</span>
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  {notificationCount}
-                </span>
-              )}
-            </Button>
-            <Button variant="outline" size="icon">
-              <Search className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={handleLogout}>
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+          
         </div>
 
         {/* Enhanced Stats Grid */}
@@ -217,60 +195,52 @@ export default function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {todayClasses.length === 0 ? (
+                  {todaysSessions.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">No classes scheduled for today.</div>
-                  ) : todayClasses.map((cls) => (
-                    <div 
-                      key={cls.id} 
+                  ) : todaysSessions.map((session) => (
+                    <div
+                      key={session.id}
                       className={`p-4 rounded-xl transition-all duration-300 border-2 ${
-                        selectedClass === cls.id 
-                          ? 'border-blue-500 bg-blue-500/5 shadow-md' 
+                        selectedClass === session.id
+                          ? 'border-blue-500 bg-blue-500/5 shadow-md'
                           : 'border-border hover:border-blue-500/50 hover:shadow-md'
                       }`}
-                      onClick={() => setSelectedClass(cls.id)}
+                      onClick={() => setSelectedClass(session.id)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1">
                           <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
                             <div className="text-center">
-                              <div className="text-white font-bold text-sm">{cls.time}</div>
-                              <div className="text-white text-xs opacity-90">{cls.endTime}</div>
+                              <div className="text-white font-bold text-sm">{session.time.split(' - ')[0]}</div>
+                              <div className="text-white text-xs opacity-90">{session.time.split(' - ')[1]}</div>
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <p className="font-semibold text-lg">{cls.course}</p>
-                              {getStatusBadge(cls.status)}
+                              <p className="font-semibold text-lg">{session.course}</p>
+                              <span className="px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded-full border border-blue-500/20">
+                                {session.type}
+                              </span>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {cls.time} - {cls.endTime}
+                                {session.time}
                               </span>
                               <span>•</span>
-                              <span>{cls.room}</span>
+                              <span>{session.room}</span>
                               <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                {cls.students} students
-                              </span>
+                              <span>{session.class}</span>
                             </div>
                           </div>
                         </div>
-                        <Button 
-                          variant={cls.attendanceTaken ? "outline" : "default"} 
+                        <Button
+                          variant="default"
                           size="sm"
-                          className={cls.attendanceTaken ? "" : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"}
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                           onClick={handleTakeAttendance}
                         >
-                          {cls.attendanceTaken ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Attendance Taken
-                            </>
-                          ) : (
-                            'Take Attendance'
-                          )}
+                          Take Attendance
                         </Button>
                       </div>
                     </div>

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { getDashboardStats } from "@/services/dashboardService";
 import {
   BookOpen,
   Calendar,
@@ -14,10 +15,33 @@ import {
   Clock,
   Award,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 
 const StudentDashboard = () => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const data = await getDashboardStats('student');
+        setDashboardData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   const dashboardCards = [
     {
       title: "My Courses",
@@ -25,7 +49,7 @@ const StudentDashboard = () => {
       icon: BookOpen,
       link: "/student/courses",
       color: "from-primary via-primary-light to-secondary",
-      count: "6 Active",
+      count: dashboardData ? `${dashboardData.stats[0]?.value || '0'} Active` : "Loading...",
       stats: "85% Avg Progress"
     },
     {
@@ -34,7 +58,7 @@ const StudentDashboard = () => {
       icon: Calendar,
       link: "/student/timetable",
       color: "from-secondary via-accent to-primary",
-      count: "This Week",
+      count: dashboardData?.todaysSessions ? `${dashboardData.todaysSessions.length} Today` : "This Week",
       stats: "15 Classes"
     },
     {
@@ -44,7 +68,7 @@ const StudentDashboard = () => {
       link: "/student/exams",
       color: "from-accent via-secondary to-primary",
       count: "3 Upcoming",
-      stats: "3.85 GPA"
+      stats: dashboardData ? `${dashboardData.stats[3]?.value || '0'} GPA` : "Loading..."
     },
     {
       title: "Attendance",
@@ -52,7 +76,7 @@ const StudentDashboard = () => {
       icon: UserCheck,
       link: "/student/attendance",
       color: "from-primary via-accent to-secondary",
-      count: "94% Rate",
+      count: dashboardData ? `${dashboardData.stats[1]?.value || '0'} Rate` : "Loading...",
       stats: "Excellent"
     },
     {
@@ -75,64 +99,96 @@ const StudentDashboard = () => {
     },
   ];
 
-  const stats = [
+  const getIconComponent = (iconName) => {
+    const iconMap = {
+      "📚": BookOpen,
+      "📝": FileText,
+      "📈": TrendingUp,
+      "🎓": Award,
+      "👥": MessageSquare,
+      "👨‍🏫": UserCheck,
+    };
+    return iconMap[iconName] || BookOpen;
+  };
+
+  const stats = dashboardData ? dashboardData.stats.map((stat, index) => ({
+    label: stat.title,
+    value: stat.value,
+    icon: getIconComponent(stat.icon),
+    color: stat.color,
+    change: stat.change,
+    trend: "up"
+  })) : [
     {
-      label: "Overall GPA",
-      value: "3.85",
-      icon: TrendingUp,
+      label: "Enrolled Courses",
+      value: "Loading...",
+      icon: BookOpen,
       color: "from-accent to-secondary",
-      change: "+0.2",
+      change: "+0",
       trend: "up"
     },
     {
-      label: "Attendance",
-      value: "94%",
-      icon: UserCheck,
+      label: "Upcoming Exams/Assignments",
+      value: "Loading...",
+      icon: FileText,
       color: "from-primary to-accent",
-      change: "+2%",
+      change: "+0",
       trend: "up"
     },
     {
-      label: "Hours Studied",
-      value: "124h",
-      icon: Clock,
+      label: "Attendance Rate",
+      value: "Loading...",
+      icon: UserCheck,
       color: "from-secondary to-primary",
-      change: "+12h",
+      change: "+0%",
       trend: "up"
     },
     {
-      label: "Achievements",
-      value: "12",
+      label: "Average Grade",
+      value: "Loading...",
       icon: Award,
       color: "from-accent to-primary",
-      change: "+3",
+      change: "+0",
       trend: "up"
     },
   ];
 
-  const recentActivity = [
-    {
-      action: "Completed assignment",
-      course: "Advanced JavaScript",
-      time: "2 hours ago",
-      icon: FileText,
-      color: "primary"
-    },
-    {
-      action: "New message from",
-      course: "Dr. Sarah Johnson",
-      time: "4 hours ago",
-      icon: MessageSquare,
-      color: "secondary"
-    },
-    {
-      action: "Exam scheduled",
-      course: "Network Security",
-      time: "Yesterday",
-      icon: Calendar,
-      color: "accent"
-    },
-  ];
+  const recentActivity = dashboardData?.recentActivity || [];
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 md:p-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6 md:p-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+              <Bell className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Failed to load dashboard</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 md:p-8">
@@ -242,23 +298,36 @@ const StudentDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => {
-                const Icon = activity.icon;
+              {recentActivity.length > 0 ? recentActivity.map((activity, index) => {
+                const getIconComponent = (iconName) => {
+                  const iconMap = {
+                    "📩": Send,
+                    "📝": FileText,
+                    "📊": TrendingUp,
+                    "👨‍🏫": UserCheck,
+                    "📚": BookOpen,
+                    "👥": MessageSquare,
+                    "🔔": Bell,
+                  };
+                  return iconMap[iconName] || Bell;
+                };
+
+                const Icon = getIconComponent(activity.icon);
                 return (
                   <div
                     key={index}
                     style={{ animationDelay: `${(index + 6) * 0.1}s` }}
                     className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer animate-fade-in-up"
                   >
-                    <div className={`h-10 w-10 rounded-lg bg-${activity.color}/10 flex items-center justify-center flex-shrink-0`}>
-                      <Icon className={`h-5 w-5 text-${activity.color}`} />
+                    <div className={`h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0`}>
+                      <Icon className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium mb-0.5">
                         {activity.action}
                       </p>
                       <p className="text-sm text-muted-foreground truncate">
-                        {activity.course}
+                        {activity.user}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {activity.time}
@@ -266,7 +335,12 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                 );
-              })}
+              }) : (
+                <div className="text-center py-8">
+                  <Bell className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No recent activity</p>
+                </div>
+              )}
             </div>
 
             <Link to="/student/notifications">
