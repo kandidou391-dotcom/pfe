@@ -2,7 +2,7 @@
 
 function userDataPrompt(context) {
   let prompt = "USER CONTEXT:\n";
-  
+
   if (context.user) {
     prompt += `Name: ${context.user.name}\n`;
     prompt += `Role: ${context.user.role}\n`;
@@ -11,6 +11,12 @@ function userDataPrompt(context) {
       prompt += `Class: ${context.user.classe}\n`;
     }
     prompt += "\n";
+  }
+
+  // For general conversation, don't include database data and allow free conversation
+  if (context.intent === 'general_conversation') {
+    prompt += "CONVERSATION MODE: This is a general conversation. Answer naturally and helpfully as a knowledgeable AI assistant. You can discuss any topic the user brings up.\n\n";
+    return prompt;
   }
 
   if (context.schedule && context.schedule.length > 0) {

@@ -8,7 +8,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
  */
 function detectIntent(message) {
   const msg = message.toLowerCase();
-  
+
   const intents = {
     schedule: /schedule|emploi|seance|timetable|calendar|cours aujourd'hui|this week|séance/i,
     exams: /exam|test|assignment|devoir|controle|quiz|examen/i,
@@ -26,8 +26,15 @@ function detectIntent(message) {
   for (const [intent, regex] of Object.entries(intents)) {
     if (regex.test(msg)) return intent;
   }
-  
-  return 'general';
+
+  // Check if it's a general question about university/academic topics
+  const academicKeywords = /university|school|college|study|learn|homework|project|deadline|semester|academic|education|campus/i;
+  if (academicKeywords.test(msg)) {
+    return 'academic_general';
+  }
+
+  // For truly general conversation topics
+  return 'general_conversation';
 }
 
 /**
@@ -35,6 +42,15 @@ function detectIntent(message) {
  */
 async function fetchUserContext(userId, intent, token, message) {
   try {
+    // For general conversation (non-database topics), don't fetch any context
+    if (intent === 'general_conversation') {
+      console.log('💬 General conversation detected - skipping database context fetch');
+      return {
+        user: await fetchUserProfile(userId, token), // Still get basic user info for personalization
+        intent: 'general_conversation'
+      };
+    }
+
     const context = {
       user: await fetchUserProfile(userId, token)
     };
@@ -44,49 +60,54 @@ async function fetchUserContext(userId, intent, token, message) {
       case 'schedule':
         context.schedule = await fetchSchedule(userId, token);
         break;
-        
+
       case 'exams':
         context.exams = await fetchExams(userId, token);
         break;
-        
+
       case 'grades':
         context.grades = await fetchGrades(userId, token);
         break;
-        
+
       case 'attendance':
         context.attendance = await fetchAttendance(userId, token);
         break;
-        
+
       case 'courses':
         context.courses = await fetchCourses(userId, token);
         break;
-        
+
       case 'teachers':
         context.teachers = await fetchTeachers(userId, token);
         break;
-        
+
       case 'students':
         context.students = await fetchStudents(userId, token);
         break;
-        
+
       case 'notifications':
         context.notifications = await fetchNotifications(userId, token);
         break;
-        
+
       case 'requests':
         context.requests = await fetchRequests(userId, token);
         break;
-        
+
       case 'announcements':
         context.announcements = await fetchAnnouncements(userId, token);
         break;
-        
+
       case 'profile':
         context.profile = await fetchUserProfile(userId, token);
         break;
-        
+
+      case 'academic_general':
+        // For academic questions that don't match specific intents, provide minimal context
+        context.summary = await fetchSummary(userId, token);
+        break;
+
       default:
-        // For general queries, fetch a summary
+        // For other general queries, fetch a summary
         context.summary = await fetchSummary(userId, token);
     }
 
