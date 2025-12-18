@@ -22,6 +22,7 @@ const presenceRoutes = require('./routes/presenceRoutes');
 const demandeRoutes = require('./routes/demandeRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const chatRoute = require("./routes/chatRoutes");
 const seanceRoutes =   require('./routes/seanceRoutes');
 const authLogMiddleware = require("./middlewares/authLogMiddleware");
 const announcementRoutes = require('./routes/announcementRoutes');
@@ -46,6 +47,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/materials', express.static(path.join(__dirname, 'public', 'courses_materials')));
+app.use('/chat', chatRoute);
 
 
 

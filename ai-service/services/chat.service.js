@@ -1,7 +1,7 @@
 // ai-service/services/chat.service.js
 const axios = require('axios');
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5001';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 /**
  * Detect user intent from message

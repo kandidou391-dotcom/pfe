@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Bot, User, Trash2, MessageSquare, Sparkles, Plus, Edit2, Check, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Send, Bot, User, Trash2, MessageSquare, Sparkles, Plus, Edit2, Check, ChevronLeft, ChevronRight, Search, Upload } from "lucide-react";
 
 const useTheme = () => {
   const [theme, setTheme] = useState(() => {
@@ -69,9 +69,13 @@ const ChatPage = () => {
   const [editingConvId, setEditingConvId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const initUser = async () => {
@@ -269,6 +273,19 @@ const ChatPage = () => {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      // Here you can add logic to upload the file or process it
+      console.log("Selected file:", file.name);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const filteredConversations = conversations.filter(conv =>
     conv.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -338,7 +355,7 @@ const ChatPage = () => {
                             <button className="h-8 w-8 rounded-lg hover:bg-accent flex items-center justify-center" onClick={(e) => { e.stopPropagation(); setEditingConvId(conv.id); setEditingTitle(conv.title); }}>
                               <Edit2 className="h-3.5 w-3.5" />
                             </button>
-                            <button className="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center" onClick={(e) => { e.stopPropagation(); if (confirm('Delete?')) deleteConversation(conv.id); }}>
+                            <button className="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center" onClick={(e) => { e.stopPropagation(); setConversationToDelete(conv); setShowDeleteModal(true); }}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -372,7 +389,7 @@ const ChatPage = () => {
                     <p className="text-sm text-muted-foreground">{totalMessages > 0 ? `${totalMessages} message${totalMessages !== 1 ? "s" : ""}` : "Start a conversation"}</p>
                   </div>
                   {currentConv && (
-                    <button onClick={() => { if (confirm(`Delete "${currentConv.title}"?`)) deleteConversation(currentConv.id); }} className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center ml-4">
+                    <button onClick={() => { setConversationToDelete(currentConv); setShowDeleteModal(true); }} className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center ml-4">
                       <Trash2 className="h-5 w-5" />
                     </button>
                   )}
@@ -446,15 +463,60 @@ const ChatPage = () => {
                   <textarea ref={(el) => { textareaRef.current = el; inputRef.current = el; }} value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} onKeyPress={handleKeyPress} placeholder="Type your message..." className="w-full px-5 py-4 pr-20 rounded-2xl border-2 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none resize-none transition-all shadow-sm" rows="1" style={{ minHeight: "56px", maxHeight: "120px" }} disabled={isLoading} />
                   <div className="absolute right-4 bottom-4 text-xs text-muted-foreground font-semibold">{inputMessage.length}/1000</div>
                 </div>
+                <button onClick={handleUploadClick} className="h-[56px] px-5 rounded-2xl font-medium bg-secondary hover:bg-secondary/80 text-secondary-foreground shadow-lg hover:shadow-xl transition-all flex items-center justify-center">
+                  <Upload className="h-5 w-5" />
+                </button>
                 <button onClick={sendMessage} disabled={!inputMessage.trim() || isLoading} className="h-[56px] px-7 rounded-2xl font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                   <Send className="h-5 w-5" />
                 </button>
               </div>
+              <input type="file" ref={fileInputRef} onChange={handleFileSelect} style={{ display: 'none' }} accept="image/*,application/pdf,text/*" />
               <p className="text-xs text-muted-foreground mt-3 text-center font-medium">Press <kbd className="px-2.5 py-1 bg-secondary border border-border text-foreground rounded-lg font-semibold">Enter</kbd> to send • <kbd className="px-2.5 py-1 bg-secondary border border-border text-foreground rounded-lg font-semibold">Shift+Enter</kbd> for new line</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && conversationToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border-2 border-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-xl bg-red-500/10 border-2 border-red-500/20 flex items-center justify-center">
+                <Trash2 className="h-6 w-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Delete Conversation</h3>
+                <p className="text-sm text-muted-foreground">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete "{conversationToDelete.title}"? This will permanently remove the conversation and all its messages.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConversationToDelete(null);
+                }}
+                className="flex-1 h-11 rounded-xl font-medium bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteConversation(conversationToDelete.id);
+                  setShowDeleteModal(false);
+                  setConversationToDelete(null);
+                }}
+                className="flex-1 h-11 rounded-xl font-medium bg-red-500 hover:bg-red-600 text-white transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
