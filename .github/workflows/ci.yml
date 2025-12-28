@@ -10,9 +10,6 @@ permissions:
   packages: write
 
 jobs:
-  # --------------------
-  # TEST JOB
-  # --------------------
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -43,15 +40,7 @@ jobs:
             npm test --if-present
           else
             echo "No test script"
-          fi
 
-      - name: Build frontend (if exists)
-        if: matrix.service == 'frontend'
-        run: npm run build --if-present
-
-  # --------------------
-  # DOCKER BUILD & PUSH
-  # --------------------
   docker:
     needs: test
     runs-on: ubuntu-latest
