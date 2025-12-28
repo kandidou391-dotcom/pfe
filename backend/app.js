@@ -32,13 +32,21 @@ const courseMaterialRoutes = require("./routes/courseMaterialsRoutes");
 
 var app = express();
 
-// ✅ CORS Configuration - Must be before other middleware
+const allowedOrigins = ['http://192.168.102.138:8081', 'http://localhost:8080'];
+
 app.use(cors({
-  origin: 'http://localhost:8080', // Your frontend URL
-  credentials: true, // Allow cookies and credentials
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 
 app.use(logger('dev'));
 app.use(express.json());
