@@ -18,9 +18,11 @@ jobs:
     strategy:
       matrix:
         service: [backend, ai-service, frontend]
+
     defaults:
       run:
         working-directory: ${{ matrix.service }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,11 +43,11 @@ jobs:
             npm test --if-present
           else
             echo "No test script"
+          fi
 
-      # ✅ Remove frontend build here — Dockerfile will handle it
-      - name: Build frontend (skip)
+      - name: Build frontend (if exists)
         if: matrix.service == 'frontend'
-        run: echo "Skipping frontend build, Dockerfile handles it"
+        run: npm run build --if-present
 
   # --------------------
   # DOCKER BUILD & PUSH
@@ -54,6 +56,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+
     strategy:
       matrix:
         svc:
@@ -63,6 +66,7 @@ jobs:
             image: ghcr.io/${{ github.repository_owner }}/pfe-frontend
           - name: ai-service
             image: ghcr.io/${{ github.repository_owner }}/pfe-ai-service
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
