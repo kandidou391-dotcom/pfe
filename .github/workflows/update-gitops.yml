@@ -14,20 +14,21 @@ jobs:
       - name: Checkout GitOps repo
         uses: actions/checkout@v4
         with:
-          repository: kannou1/gitops-repo
+          repository: kandidou391-dotcom/gitops-repo
           token: ${{ secrets.GITOPS_TOKEN }}
           ref: main
 
       - name: Set image tags to SHA
         run: |
           SHA="${{ github.event.workflow_run.head_sha }}"
+          OWNER="kandidou391-dotcom"  # <- updated owner
 
           # backend
-          sed -i "s|image: ghcr.io/kannou1/pfe-backend:.*|image: ghcr.io/kannou1/pfe-backend:${SHA}|g" k8s/backend/deployment.yaml
+          sed -i "s|image: ghcr.io/.*/pfe-backend:.*|image: ghcr.io/${OWNER}/pfe-backend:${SHA}|g" k8s/backend/deployment.yaml
           # frontend
-          sed -i "s|image: ghcr.io/kannou1/pfe-frontend:.*|image: ghcr.io/kannou1/pfe-frontend:${SHA}|g" k8s/frontend/deployment.yaml
+          sed -i "s|image: ghcr.io/.*/pfe-frontend:.*|image: ghcr.io/${OWNER}/pfe-frontend:${SHA}|g" k8s/frontend/deployment.yaml
           # ai-service
-          sed -i "s|image: ghcr.io/kannou1/pfe-ai-service:.*|image: ghcr.io/kannou1/pfe-ai-service:${SHA}|g" k8s/ai-service/deployment.yaml
+          sed -i "s|image: ghcr.io/.*/pfe-ai-service:.*|image: ghcr.io/${OWNER}/pfe-ai-service:${SHA}|g" k8s/ai-service/deployment.yaml
 
       - name: Commit & push
         run: |
