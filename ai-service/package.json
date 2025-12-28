@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-  "test": "echo \"No tests yet\"",
+    "start": "node app.js",
+    "test": "echo \"No tests yet\"",
     "dev": "nodemon app.js"
   },
   "keywords": [],
