@@ -5,7 +5,6 @@ on:
     branches: ["main"]
   pull_request:
 
-# REQUIRED for GHCR
 permissions:
   contents: read
   packages: write
@@ -62,17 +61,16 @@ jobs:
       matrix:
         svc:
           - name: backend
-            image: ghcr.io/kannou1/pfe-backend
+            image: ghcr.io/${{ github.repository_owner }}/pfe-backend
           - name: frontend
-            image: ghcr.io/kannou1/pfe-frontend
+            image: ghcr.io/${{ github.repository_owner }}/pfe-frontend
           - name: ai-service
-            image: ghcr.io/kannou1/pfe-ai-service
+            image: ghcr.io/${{ github.repository_owner }}/pfe-ai-service
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # REQUIRED — fixes GHCR permission_denied error
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
