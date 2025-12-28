@@ -32,7 +32,7 @@ const courseMaterialRoutes = require("./routes/courseMaterialsRoutes");
 
 var app = express();
 
-const allowedOrigins = ['http://192.168.102.138:8081', 'http://localhost:8080'];
+const allowedOrigins = ['http://192.168.102.138:31877', 'http://localhost:8080'];
 
 app.use(cors({
   origin: function(origin, callback) {
